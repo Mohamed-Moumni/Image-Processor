@@ -29,7 +29,7 @@ class UserListView(APIView):
         List User View
     """
 
-    @authentication_classes([])
+    @authentication_classes([AllowAny])
     @permission_classes([AllowAny])
     def post(self, request, format=None):
         try:

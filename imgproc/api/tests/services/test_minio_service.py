@@ -23,7 +23,7 @@ class TestMinioService(unittest.TestCase):
         
         with open("file_test.txt", "rb") as f:
             result = minio_service.add_blob_to_bucket(bucket_name, f, username)
-            self.assertEqual(result, True)
+            self.assertEqual(result, "user1-file_test.txt")
     
     def test_get_blob_from_bucket(self):
         minio_service = MinioService()

@@ -23,7 +23,7 @@ class MinioService:
         length = len(blob.read())
         blob.seek(0)
         self.instance.put_object(bucket_name, blob_name, blob, length)
-        return True
+        return blob_name
 
     def remove_blob_from_bucket(self, bucket_name:str, blob_name:str):
         self.instance.remove_object(bucket_name, blob_name)
