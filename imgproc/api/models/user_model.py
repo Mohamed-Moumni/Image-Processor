@@ -1,1 +1,1 @@
-from django.db import modesl
+from django.db import models
