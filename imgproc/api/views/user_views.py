@@ -3,15 +3,34 @@ from ..serializers.user_serializer import UserSerializer
 from rest_framework import status
 from rest_framework.response import Response
 from ..services.user_services import UserService
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.decorators import permission_classes, authentication_classes
+from rest_framework_simplejwt.authentication import JWTAuthentication
+from rest_framework_simplejwt.tokens import RefreshToken
+
+class UserAuthView(APIView):
+    """
+        Auth User View
+    """
+
+    def post(self, request, format=None):
+        try:
+            if not 'refresh_token' in request.data:
+                return Response(data={"refresh_token": ["This field is required."]}, status=status.HTTP_400_BAD_REQUEST)
+            refresh_token = request.data['refresh_token']
+            token = RefreshToken(refresh_token)
+            token.blacklist()
+            return Response({"message": "Logged Out!"}, status=status.HTTP_205_RESET_CONTENT)
+        except Exception as e:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
 
 class UserListView(APIView):
     """
         List User View
     """
-    authentication_classes = []
-    permission_classes = [AllowAny]
-    
+
+    @authentication_classes([])
+    @permission_classes([AllowAny])
     def post(self, request, format=None):
         try:
             user_serializer = UserSerializer(data=request.data)
@@ -23,6 +42,8 @@ class UserListView(APIView):
         except Exception as e:
             raise e
     
+    @authentication_classes([JWTAuthentication])
+    @permission_classes([IsAuthenticated])
     def get(self, request, id:int=None, username:str=None, format=None):
         user_service = UserService()
         if id:
