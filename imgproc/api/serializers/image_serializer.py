@@ -4,4 +4,4 @@ from ..models.image_model import Image
 class ImageSerializer(serializers.ModelSerializer):
     class Meta:
         model = Image
-        fields = ["id", "bucket_name", "blob_name"]
+        fields = ["id", "bucket_name", "blob_name", "user", "created_at", "updated_at"]

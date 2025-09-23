@@ -17,21 +17,22 @@ class ImageListView(APIView):
         created_image = image_service.create(
             request.user.username, image_bytes.name, image_bytes, request.user.id
         )
-        serializer = ImageSerializer(data=created_image)
-        if serializer.is_valid():
-            return Response(
-                serializer.data,
-                status=status.HTTP_201_CREATED,
-            )
-        return Response(data=serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    def get(self, request, id: int = None, user_id: int = None):
         try:
-            if id and user_id:
-                image_service = ImageService()
-                data_img = image_service.get(id, user_id=user_id)
-                return Response(data=data_img, status=status.HTTP_200_OK)
+            serializer = ImageSerializer(created_image)
+            return Response(
+                data=serializer.data,
+                status=status.HTTP_201_CREATED)
         except Exception as e:
+            return Response(data=serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def get(self, request, id: int = None):
+        try:
+            image_service = ImageService()
+            data_img = image_service.get(id=id)
+            return Response({"image_url": data_img}, status=status.HTTP_200_OK)
+        except Exception as e:
+            print(e)
             return Response(
                 {"message": f"No Image Found with ID: {id}"},
                 status=status.HTTP_404_NOT_FOUND,

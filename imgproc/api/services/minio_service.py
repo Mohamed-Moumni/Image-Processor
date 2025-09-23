@@ -1,4 +1,5 @@
 import os
+from datetime import timedelta
 from minio import Minio
 
 class MinioService:
@@ -11,15 +12,11 @@ class MinioService:
         self.instance = Minio(minio_host,secure=False, access_key=access_key, secret_key=secret_key)
 
     def create_bucket(self, bucket_name:str) -> bool:
-        ## check if the bucket is already exist
-        ## throws an error
-        ## if not just create the bucket
         if not self.instance.bucket_exists(bucket_name):
             bucket = self.instance.make_bucket(bucket_name)
         return True
 
-    def add_blob_to_bucket(self, bucket_name: str, blob, username:str) -> bool:
-        blob_name:str = f"{username}-{blob.name}"
+    def add_blob_to_bucket(self, bucket_name: str, blob, blob_name:str) -> bool:
         length = len(blob.read())
         blob.seek(0)
         self.instance.put_object(bucket_name, blob_name, blob, length)
@@ -29,7 +26,7 @@ class MinioService:
         self.instance.remove_object(bucket_name, blob_name)
 
     def get_blob_from_bucket(self, bucket_name:str, blob_name:str):
-        return self.instance.get_object(bucket_name, blob_name)
+        return self.instance.presigned_get_object(bucket_name, blob_name, expires=timedelta(minutes=30))
     
     def blob_exist_in_bucket(self, bucket_name:str, blob_name:str) -> bool:
         try:

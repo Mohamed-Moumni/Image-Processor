@@ -18,21 +18,20 @@ class ImageService:
         return image
     
     
-    def get(self, id:int, user_id:int):
+    def get(self, id:int):
         try:
-            image_object = Image.objects.get(id=id, user_id=user_id)
+            image_object = Image.objects.get(id=id)
             minio_service = MinioService()
-            blob = minio_service.get_blob_from_bucket(image_object.bucket_name, image_object.blob_name)
-            data = blob.read()
-            blob.close()
-            blob.release_conn()
-            return data
+            print(f"Image Object: {image_object.bucket_name} ::: blob Name: {image_object.blob_name}")
+            blob_url = minio_service.get_blob_from_bucket(image_object.bucket_name, image_object.blob_name)
+            print(f"BLOB URL: {blob_url}")
+            return blob_url
         except Image.DoesNotExist as e:
             raise e
     
-    def delete(self, id:int, user_id:int):
+    def delete(self, id:int):
         try:
-            image_object = Image.objects.get(id=id, user_id=user_id)
+            image_object = Image.objects.get(id=id)
             minio_service = MinioService()
             minio_service.remove_blob_from_bucket(image_object.bucket_name, image_object.blob_name)
         except Image.DoesNotExist as e:
