@@ -22,9 +22,7 @@ class ImageService:
         try:
             image_object = Image.objects.get(id=id)
             minio_service = MinioService()
-            print(f"Image Object: {image_object.bucket_name} ::: blob Name: {image_object.blob_name}")
             blob_url = minio_service.get_blob_from_bucket(image_object.bucket_name, image_object.blob_name)
-            print(f"BLOB URL: {blob_url}")
             return blob_url
         except Image.DoesNotExist as e:
             raise e
@@ -34,6 +32,7 @@ class ImageService:
             image_object = Image.objects.get(id=id)
             minio_service = MinioService()
             minio_service.remove_blob_from_bucket(image_object.bucket_name, image_object.blob_name)
+            image_object.delete()
         except Image.DoesNotExist as e:
             raise e
     

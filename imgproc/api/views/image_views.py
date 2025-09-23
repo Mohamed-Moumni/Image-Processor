@@ -30,22 +30,21 @@ class ImageListView(APIView):
         try:
             image_service = ImageService()
             data_img = image_service.get(id=id)
-            return Response({"image_url": data_img}, status=status.HTTP_200_OK)
+            return Response({"id": id, "username": request.user.username, "image_url": data_img}, status=status.HTTP_200_OK)
         except Exception as e:
-            print(e)
             return Response(
                 {"message": f"No Image Found with ID: {id}"},
                 status=status.HTTP_404_NOT_FOUND,
             )
 
-    def delete(self, request, id: int = None, user_id: int = None):
+    def delete(self, request, id: int = None):
         try:
-            if id and user_id:
-                image_service = ImageService()
-                image_service.delete(id=id, user_id=user_id)
-                return Response(
-                    {"message": f"Image with ID: {id} Deleted successfully."}
-                )
+            image_service = ImageService()
+            image_service.delete(id=id)
+            return Response(
+                {"message": f"Image with ID: {id} Deleted successfully."},
+                status=status.HTTP_205_RESET_CONTENT
+            )
         except Exception as e:
             return Response(
                 {"message": f"No Image Found with ID: {id}"},
