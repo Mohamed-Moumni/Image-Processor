@@ -172,8 +172,40 @@ class TransformationService:
         self.minio_serv.update_blob(image['bucket_name'], image['blob_name'], buffer)
         return image
 
-    def change_format(self):
-        pass
+    def change_format(self, image, user_id:int, **transformation):
+        obj = self.minio_serv.get_object_file_from_bucket(image['bucket_name'], image['blob_name'])
+        img = Image.open(obj)
+        params = {}
+
+        format_map = {
+            "jpeg": "JPEG",
+            "png": "PNG",
+            "webp": "WEBP",
+            "avif": "AVIF",
+            "gif": "GIF",
+        }
+        pil_format = format_map[transformation["format"].lower()]
+
+        # Quality if supported
+        if 'quality' in transformation and pil_format in ["JPEG", "WEBP", "AVIF"]:
+            params["quality"] = transformation["quality"]
+
+        # If converting an image with transparency → JPEG (or other non-alpha format)
+        if pil_format in ["JPEG"] and img.mode in ("RGBA", "LA"):
+            changed_image = Image.new("RGB", img.size, transformation["background"])
+            changed_image.paste(img, mask=img.split()[-1])  # use alpha channel
+        elif img.mode == "P":
+            changed_image = img.convert("RGB")
+        else:
+            changed_image = img
+
+        buffer = io.BytesIO()
+        changed_image.save(buffer, format=pil_format, **params)
+        buffer.seek(0)
+
+        new_blob_name = '.'.join([image['blob_name'].split('.')[0], pil_format])
+        image = self.img_serv.create(image['bucket_name'], new_blob_name, buffer, user_id)
+        return image
 
     def apply_filter(self):
         pass

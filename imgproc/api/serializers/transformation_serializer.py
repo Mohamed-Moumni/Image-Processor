@@ -46,3 +46,21 @@ class CompressTransformationSerializer(serializers.Serializer):
         default=False,
         help_text="Remove EXIF/IPTC metadata"
     )
+
+class ChangeFormatTransformationSerializer(serializers.Serializer):
+    FORMAT_CHOICES = ["jpeg", "png", "webp", "avif", "gif"]
+
+    format = serializers.ChoiceField(
+        choices=FORMAT_CHOICES,
+        help_text="Target image format"
+    )
+    quality = serializers.IntegerField(
+        min_value=1,
+        max_value=100,
+        required=False,
+        help_text="Optional quality (if supported by the format)"
+    )
+    background = serializers.CharField(
+        default="#ffffff",
+        help_text="Background fill for non-transparent formats like JPEG"
+    )

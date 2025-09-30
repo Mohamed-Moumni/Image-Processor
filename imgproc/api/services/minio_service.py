@@ -1,6 +1,6 @@
 import os
-from datetime import timedelta
 from minio import Minio
+from datetime import timedelta
 
 class MinioService:
     def __init__(self):

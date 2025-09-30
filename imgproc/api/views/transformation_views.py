@@ -1,6 +1,6 @@
 from rest_framework.views import APIView
 from ..services.transformation_service import TransformationService, ImageService
-from ..serializers.transformation_serializer import CompressTransformationSerializer, FlipTransformationSerializer, RotateTransformationSerializer, CropTransformationSerializer, ResizeTransformationSerializer
+from ..serializers.transformation_serializer import ChangeFormatTransformationSerializer, CompressTransformationSerializer, FlipTransformationSerializer, RotateTransformationSerializer, CropTransformationSerializer, ResizeTransformationSerializer
 from rest_framework.response import Response
 from rest_framework import status
 
@@ -70,6 +70,21 @@ class TransformationCompressView(APIView):
                 img_serv = ImageService()
                 image = img_serv.get(id)
                 transformed_image = trans_service.compress(image, **serializer.validated_data)
+                return Response(data=transformed_image, status=status.HTTP_200_OK)
+            except Exception as e:
+                return Response({"error": str(e)}, status=status.HTTP_404_NOT_FOUND)
+        else:
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class TransformationChangeFormatView(APIView):
+    def post(self, request, id:int):
+        serializer = ChangeFormatTransformationSerializer(data=request.data)
+        if serializer.is_valid():
+            try:
+                trans_service = TransformationService()
+                img_serv = ImageService()
+                image = img_serv.get(id)
+                transformed_image = trans_service.change_format(image, request.user.id, **serializer.validated_data,)
                 return Response(data=transformed_image, status=status.HTTP_200_OK)
             except Exception as e:
                 return Response({"error": str(e)}, status=status.HTTP_404_NOT_FOUND)
