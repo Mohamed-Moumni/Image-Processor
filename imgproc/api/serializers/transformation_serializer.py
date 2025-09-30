@@ -6,8 +6,14 @@ class ResizeTransformationSerializer(serializers.Serializer):
         ('contain', 'Contain'),
         ('fill', 'Fill')
     ]
-    width = serializers.FloatField()
-    height = serializers.FloatField()
+    width = serializers.FloatField(required=True)
+    height = serializers.FloatField(required=True)
     fit = serializers.ChoiceField(choices=FIT_TYPES, default='cover')
     upscale = serializers.BooleanField(default=False)
     background = serializers.CharField(default="#ffffff")
+
+class CropTransformationSerializer(serializers.Serializer):
+    x = serializers.FloatField()
+    y = serializers.FloatField()
+    width = serializers.FloatField()
+    height = serializers.FloatField()

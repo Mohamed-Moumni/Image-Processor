@@ -7,6 +7,9 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.decorators import permission_classes, authentication_classes
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework_simplejwt.tokens import RefreshToken
+from django.utils.decorators import method_decorator
+from django.views.decorators.cache import cache_page
+from django.views.decorators.vary import vary_on_cookie, vary_on_headers
 
 class UserAuthView(APIView):
     """
@@ -29,6 +32,11 @@ class UserListView(APIView):
         List User View
     """
 
+    def get_permissions(self):
+        if not self.request.method in ["POST"]:
+            return [IsAuthenticated()]
+        return [AllowAny()]
+
     @authentication_classes([AllowAny])
     @permission_classes([AllowAny])
     def post(self, request, format=None):
@@ -44,6 +52,7 @@ class UserListView(APIView):
     
     @authentication_classes([JWTAuthentication])
     @permission_classes([IsAuthenticated])
+    @method_decorator(cache_page(60 * 60 * 2))
     def get(self, request, id:int=None, username:str=None, format=None):
         user_service = UserService()
         if id:

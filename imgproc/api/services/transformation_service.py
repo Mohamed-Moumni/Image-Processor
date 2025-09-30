@@ -6,13 +6,11 @@ import io
 
 class TransformationService:
     def __init__(self):
-        pass
+        self.img_serv = ImageService()
+        self.minio_serv = MinioService()
 
-    def resize(self, id:int, **transformation):
-        img_serv = ImageService()
-        minio_serv = MinioService()
-        image = img_serv.get(id)
-        object = minio_serv.get_object_file_from_bucket(image['bucket_name'], image['blob_name'])
+    def resize(self, image:int, **transformation):
+        object = self.minio_serv.get_object_file_from_bucket(image['bucket_name'], image['blob_name'])
         
         # Open the image
         img = Image.open(object)
@@ -59,11 +57,31 @@ class TransformationService:
         resized_img.save(buffer, format="PNG")
         buffer.seek(0)
         
-        minio_serv.update_blob(image['bucket_name'], image['blob_name'], buffer)
+        self.minio_serv.update_blob(image['bucket_name'], image['blob_name'], buffer)
         return image
 
-    def crop(self):
-        pass
+    def crop(self, image, **transformation):
+        obj = self.minio_serv.get_object_file_from_bucket(image['bucket_name'], image['blob_name'])
+    
+        img = Image.open(obj)
+        original_width, original_height = img.size
+
+        x = int(transformation["x"])
+        y = int(transformation["y"])
+        w = int(transformation["width"])
+        h = int(transformation["height"])
+
+        right = min(x + w, original_width)
+        bottom = min(y + h, original_height)
+
+        cropped_img = img.crop((x, y, right, bottom))
+
+        buffer = io.BytesIO()
+        cropped_img.save(buffer, format="PNG")
+        buffer.seek(0)
+
+        self.minio_serv.update_blob(image['bucket_name'], image['blob_name'], buffer)
+        return image        
 
     def rotate(self):
         pass

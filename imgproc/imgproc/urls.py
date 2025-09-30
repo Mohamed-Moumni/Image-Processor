@@ -25,5 +25,5 @@ urlpatterns = [
     path("api/users/login", TokenObtainPairView.as_view(), name="token_obtain_pair"),
     path("api/users/", include("api.urls.user_urls")),
     path("api/images/", include("api.urls.image_urls")),
-    path("api/transform/resize/", include("api.urls.transformation_urls")),
+    path("api/transform/", include("api.urls.transformation_urls")),
 ]

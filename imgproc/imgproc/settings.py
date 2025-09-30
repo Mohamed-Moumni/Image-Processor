@@ -119,6 +119,12 @@ REST_FRAMEWORK = {
     ),
 }
 
+CACHES = {
+    "default": {
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": "redis://localhost:6379/1",
+    }
+}
 
 # Internationalization
 # https://docs.djangoproject.com/en/5.2/topics/i18n/

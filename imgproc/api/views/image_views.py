@@ -19,11 +19,9 @@ class ImageListView(APIView):
             created_image = image_service.create(
                 request.user.username, image_bytes.name, image_bytes, request.user.id
             )
-            return Response(
-                data=created_image,
-                status=status.HTTP_201_CREATED)
+            return Response(data=created_image, status=status.HTTP_201_CREATED)
         except Exception as e:
-            return Response({"message": "Error"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"message": f"{e}"}, status=status.HTTP_400_BAD_REQUEST)
 
     def get(self, request, id: int = None):
         try:
