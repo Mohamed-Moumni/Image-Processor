@@ -137,11 +137,40 @@ class TransformationService:
         self.minio_serv.update_blob(image['bucket_name'], image['blob_name'], buffer)
         return image
 
-    def mirror(self):
-        pass
+    def compress(self, image, **transformation):
+        obj = self.minio_serv.get_object_file_from_bucket(image['bucket_name'], image['blob_name'])
+        img = Image.open(obj)
+        params = {}
 
-    def compress(self):
-        pass
+        # Handle compression method
+        if transformation["method"] == "progressive":
+            params["progressive"] = True
+        elif transformation["method"] == "lossless":
+            transformation["quality"] = 100 
+        # keep maximum quality, just strip metadata
+        # "lossy" → just use the quality value
+
+        params["optimize"] = transformation["optimize"]
+        params["quality"] = transformation["quality"]
+
+        # Prepare image saving
+        buffer = io.BytesIO()
+        save_kwargs = {
+            "format": "JPEG",
+            **params
+        }
+
+        # Strip metadata if required
+        if transformation["strip_metadata"]:
+            data = list(img.getdata())
+            image = Image.new(img.mode, img.size)
+            image.putdata(data)
+
+        img.save(buffer, **save_kwargs)
+        buffer.seek(0)
+
+        self.minio_serv.update_blob(image['bucket_name'], image['blob_name'], buffer)
+        return image
 
     def change_format(self):
         pass

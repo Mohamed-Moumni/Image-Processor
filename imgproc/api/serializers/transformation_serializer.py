@@ -27,3 +27,22 @@ class FlipTransformationSerializer(serializers.Serializer):
     direction = serializers.ChoiceField(
         choices=["horizontal", "vertical"],
         help_text="Flip direction: 'horizontal' (left-right) or 'vertical' (top-bottom)")
+
+class CompressTransformationSerializer(serializers.Serializer):
+    quality = serializers.IntegerField(
+        min_value=1,
+        max_value=100,
+        help_text="Compression quality level (1–100)"
+    )
+    method = serializers.ChoiceField(
+        choices=["lossy", "lossless", "progressive"],
+        help_text="Compression method"
+    )
+    optimize = serializers.BooleanField(
+        default=False,
+        help_text="Auto-tune compression"
+    )
+    strip_metadata = serializers.BooleanField(
+        default=False,
+        help_text="Remove EXIF/IPTC metadata"
+    )
