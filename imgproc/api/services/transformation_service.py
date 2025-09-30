@@ -1,6 +1,6 @@
 from .minio_service import MinioService
 from .image_service import ImageService
-from PIL import Image, ExifTags
+from PIL import Image, ExifTags, ImageOps
 import io
 
 
@@ -92,10 +92,8 @@ class TransformationService:
         """
         obj = self.minio_serv.get_object_file_from_bucket(image['bucket_name'], image['blob_name'])
 
-        # Open the image
         img = Image.open(obj)
 
-        # --- Step 1: Auto-orient based on EXIF ---
         if transformation.get("auto_orient", False):
             try:
                 for orientation in ExifTags.TAGS.keys():
@@ -111,16 +109,13 @@ class TransformationService:
                     elif orientation_value == 8:
                         img = img.rotate(90, expand=True)
             except Exception:
-                pass  # ignore if EXIF is missing or invalid
+                pass
 
-        # --- Step 2: Rotate the image ---
         angle = float(transformation.get("angle", 0))
         background_color = transformation.get("background_color", "#ffffff")
 
-        # Pillow's rotate rotates counter-clockwise by default, expand=True resizes canvas
         rotated_img = img.rotate(-angle, expand=True, fillcolor=background_color)
 
-        # --- Step 3: Save back to MinIO ---
         buffer = io.BytesIO()
         rotated_img.save(buffer, format="PNG")
         buffer.seek(0)
@@ -128,8 +123,19 @@ class TransformationService:
         self.minio_serv.update_blob(image['bucket_name'], image['blob_name'], buffer)
         return image
 
-    def flip(self):
-        pass
+    def flip(self, image, direction):
+        obj = self.minio_serv.get_object_file_from_bucket(image['bucket_name'], image['blob_name'])
+        img = Image.open(obj)
+        if direction == "horizontal":
+            fliped_img = ImageOps.mirror(img)
+        elif direction == "vertical":
+            fliped_img = ImageOps.flip(img)
+        buffer = io.BytesIO()
+        fliped_img.save(buffer, format="PNG")
+        buffer.seek(0)
+
+        self.minio_serv.update_blob(image['bucket_name'], image['blob_name'], buffer)
+        return image
 
     def mirror(self):
         pass

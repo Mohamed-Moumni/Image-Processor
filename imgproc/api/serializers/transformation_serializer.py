@@ -22,3 +22,8 @@ class RotateTransformationSerializer(serializers.Serializer):
     angle = serializers.FloatField()
     background_color = serializers.CharField(default="#ffffff")
     auto_orient = serializers.IntegerField(required=False)
+
+class FlipTransformationSerializer(serializers.Serializer):
+    direction = serializers.ChoiceField(
+        choices=["horizontal", "vertical"],
+        help_text="Flip direction: 'horizontal' (left-right) or 'vertical' (top-bottom)")

@@ -1,6 +1,6 @@
 from rest_framework.views import APIView
 from ..services.transformation_service import TransformationService, ImageService
-from ..serializers.transformation_serializer import RotateTransformationSerializer, CropTransformationSerializer, ResizeTransformationSerializer
+from ..serializers.transformation_serializer import FlipTransformationSerializer, RotateTransformationSerializer, CropTransformationSerializer, ResizeTransformationSerializer
 from rest_framework.response import Response
 from rest_framework import status
 
@@ -40,6 +40,21 @@ class TransformationRotateView(APIView):
                 img_serv = ImageService()
                 image = img_serv.get(id)
                 transformed_image = trans_service.rotate(image, **serializer.validated_data)
+                return Response(data=transformed_image, status=status.HTTP_200_OK)
+            except Exception as e:
+                return Response({"error": str(e)}, status=status.HTTP_404_NOT_FOUND)
+        else:
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class TransformationFlipView(APIView):
+    def post(self, request, id:int):
+        serializer = FlipTransformationSerializer(data=request.data)
+        if serializer.is_valid():
+            try:
+                trans_service = TransformationService()
+                img_serv = ImageService()
+                image = img_serv.get(id)
+                transformed_image = trans_service.flip(image, **serializer.validated_data)
                 return Response(data=transformed_image, status=status.HTTP_200_OK)
             except Exception as e:
                 return Response({"error": str(e)}, status=status.HTTP_404_NOT_FOUND)
