@@ -1,6 +1,6 @@
 from .minio_service import MinioService
 from .image_service import ImageService
-from PIL import Image
+from PIL import Image, ExifTags
 import io
 
 
@@ -83,8 +83,50 @@ class TransformationService:
         self.minio_serv.update_blob(image['bucket_name'], image['blob_name'], buffer)
         return image        
 
-    def rotate(self):
-        pass
+    def rotate(self, image, **transformation):
+        """
+        Rotate the image based on transformation attributes:
+        - angle: float, rotation angle in degrees (clockwise)
+        - background_color: fill color for empty areas after rotation
+        - auto_orient: bool, correct orientation based on EXIF
+        """
+        obj = self.minio_serv.get_object_file_from_bucket(image['bucket_name'], image['blob_name'])
+
+        # Open the image
+        img = Image.open(obj)
+
+        # --- Step 1: Auto-orient based on EXIF ---
+        if transformation.get("auto_orient", False):
+            try:
+                for orientation in ExifTags.TAGS.keys():
+                    if ExifTags.TAGS[orientation] == 'Orientation':
+                        break
+                exif = img._getexif()
+                if exif:
+                    orientation_value = exif.get(orientation, None)
+                    if orientation_value == 3:
+                        img = img.rotate(180, expand=True)
+                    elif orientation_value == 6:
+                        img = img.rotate(270, expand=True)
+                    elif orientation_value == 8:
+                        img = img.rotate(90, expand=True)
+            except Exception:
+                pass  # ignore if EXIF is missing or invalid
+
+        # --- Step 2: Rotate the image ---
+        angle = float(transformation.get("angle", 0))
+        background_color = transformation.get("background_color", "#ffffff")
+
+        # Pillow's rotate rotates counter-clockwise by default, expand=True resizes canvas
+        rotated_img = img.rotate(-angle, expand=True, fillcolor=background_color)
+
+        # --- Step 3: Save back to MinIO ---
+        buffer = io.BytesIO()
+        rotated_img.save(buffer, format="PNG")
+        buffer.seek(0)
+
+        self.minio_serv.update_blob(image['bucket_name'], image['blob_name'], buffer)
+        return image
 
     def flip(self):
         pass

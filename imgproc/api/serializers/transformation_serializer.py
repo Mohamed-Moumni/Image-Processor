@@ -17,3 +17,8 @@ class CropTransformationSerializer(serializers.Serializer):
     y = serializers.FloatField()
     width = serializers.FloatField()
     height = serializers.FloatField()
+
+class RotateTransformationSerializer(serializers.Serializer):
+    angle = serializers.FloatField()
+    background_color = serializers.CharField(default="#ffffff")
+    auto_orient = serializers.IntegerField(required=False)
