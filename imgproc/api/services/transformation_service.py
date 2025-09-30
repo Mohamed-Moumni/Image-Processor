@@ -1,6 +1,6 @@
 from .minio_service import MinioService
 from .image_service import ImageService
-from PIL import Image, ExifTags, ImageOps
+from PIL import Image, ExifTags, ImageOps, ImageEnhance, ImageFilter
 import io
 
 
@@ -137,7 +137,7 @@ class TransformationService:
         self.minio_serv.update_blob(image['bucket_name'], image['blob_name'], buffer)
         return image
 
-    def compress(self, image, **transformation):
+    def compress(self, image, user_id, **transformation):
         obj = self.minio_serv.get_object_file_from_bucket(image['bucket_name'], image['blob_name'])
         img = Image.open(obj)
         params = {}
@@ -207,5 +207,59 @@ class TransformationService:
         image = self.img_serv.create(image['bucket_name'], new_blob_name, buffer, user_id)
         return image
 
-    def apply_filter(self):
-        pass
+    def apply_filter(self, img_record, user_id, **transformation):
+        obj = self.minio_serv.get_object_file_from_bucket(img_record['bucket_name'], img_record['blob_name'])
+        image = Image.open(obj)
+        if transformation["intensity"] is None:
+            transformation["intensity"] = 1.0
+        
+        transformation["filter_type"] = transformation["filter_type"].lower()
+        
+        if transformation["filter_type"] == "grayscale":
+            image = image.convert("L").convert("RGB")
+        elif transformation["filter_type"] == "sepia":
+            sepia_img = image.convert("RGB")
+            pixels = sepia_img.load()
+            for y in range(sepia_img.height):
+                for x in range(sepia_img.width):
+                    r, g, b = pixels[x, y]
+                    tr = int(0.393 * r + 0.769 * g + 0.189 * b)
+                    tg = int(0.349 * r + 0.686 * g + 0.168 * b)
+                    tb = int(0.272 * r + 0.534 * g + 0.131 * b)
+                    pixels[x, y] = (
+                        min(int(tr * transformation["intensity"]), 255),
+                        min(int(tg * transformation["intensity"]), 255),
+                        min(int(tb * transformation["intensity"]), 255)
+                    )
+            image = sepia_img
+        elif transformation["filter_type"] == "blur":
+            if 'radius' in transformation:
+                radius = int(transformation["radius"])
+            else:
+                radius = int((transformation["intensity"] * 2))
+            image = image.filter(ImageFilter.GaussianBlur(radius=radius))
+        elif transformation["filter_type"] == "brightness":
+            enhancer = ImageEnhance.Brightness(image)
+            image = enhancer.enhance(transformation["intensity"])
+        elif transformation["filter_type"] == "contrast":
+            enhancer = ImageEnhance.Contrast(image)
+            image = enhancer.enhance(transformation["intensity"])
+        elif transformation["filter_type"] == "sharpen":
+            enhancer = ImageEnhance.Sharpness(image)
+            image = enhancer.enhance(transformation["intensity"])
+        elif transformation["filter_type"] == "edge":
+            if 'radius' in transformation:
+                radius = transformation["radius"]
+            else:
+                radius = 2
+            image = image.filter(ImageFilter.FIND_EDGES, radius=radius)
+        else:
+            raise ValueError(f"Unsupported filter type: {transformation["filter_type"]}")
+
+        buffer = io.BytesIO()
+        image.save(buffer, format="PNG")
+        buffer.seek(0)
+
+        new_blob_name = '.'.join([img_record['blob_name'].split('.')[0], "PNG"])
+        image = self.img_serv.create(img_record['bucket_name'], new_blob_name, buffer, user_id)
+        return image

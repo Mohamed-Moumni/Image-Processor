@@ -64,3 +64,32 @@ class ChangeFormatTransformationSerializer(serializers.Serializer):
         default="#ffffff",
         help_text="Background fill for non-transparent formats like JPEG"
     )
+
+class FilterTransformationSerializer(serializers.Serializer):
+    FILTER_CHOICES = [
+        "grayscale",
+        "sepia",
+        "blur",
+        "brightness",
+        "contrast",
+        "sharpen",
+        "edge",
+    ]
+
+    filter_type = serializers.ChoiceField(
+        choices=FILTER_CHOICES,
+        help_text="Type of filter to apply"
+    )
+    intensity = serializers.FloatField(
+        required=False,
+        default=1.0,
+        help_text="Filter strength (0–100 or float depending on filter)"
+    )
+    radius = serializers.FloatField(
+        required=False,
+        help_text="Optional radius (used for blur, edge detection)"
+    )
+    threshold = serializers.IntegerField(
+        required=False,
+        help_text="Optional threshold for edge/contrast filters"
+    )
