@@ -1,5 +1,6 @@
 from .minio_service import MinioService
 from ..models.image_model import Image
+from ..serializers.image_serializer import ImageSerializer
 
 
 class ImageService:
@@ -15,7 +16,8 @@ class ImageService:
             "blob_name": blob_name,
         }
         image = Image.objects.create(**data, user_id=user_id)
-        return image
+        serializer = ImageSerializer(image)
+        return serializer.data
     
     
     def get(self, id:int):
@@ -23,7 +25,12 @@ class ImageService:
             image_object = Image.objects.get(id=id)
             minio_service = MinioService()
             blob_url = minio_service.get_blob_from_bucket(image_object.bucket_name, image_object.blob_name)
-            return blob_url
+            serializer = ImageSerializer(image_object)
+            data = {
+                **(serializer.data),
+                "image_url": blob_url,
+            }
+            return data
         except Image.DoesNotExist as e:
             raise e
     

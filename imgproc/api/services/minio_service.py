@@ -1,6 +1,6 @@
 import os
-from datetime import timedelta
 from minio import Minio
+from datetime import timedelta
 
 class MinioService:
     def __init__(self):
@@ -34,3 +34,15 @@ class MinioService:
             return True
         except Exception as e:
             return False
+    
+    def get_object_file_from_bucket(self, bucket_name:str, blob_name:str):
+        try:
+            return self.instance.get_object(bucket_name, blob_name)
+        except Exception as e:
+            raise e
+
+    def update_blob(self, bucket_name:str, blob_name:str, blob):
+        try:
+            return self.instance.put_object(bucket_name, blob_name, blob, -1, part_size=10*1024*1024)
+        except Exception as e:
+            raise e
