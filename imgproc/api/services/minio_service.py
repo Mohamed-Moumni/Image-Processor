@@ -34,7 +34,3 @@ class MinioService:
             return True
         except Exception as e:
             return False
-
-
-    # def update_blob(self):
-    #     pass
